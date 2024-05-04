@@ -1,0 +1,8 @@
+# Build
+/.build/
+/result
+
+# Binaries
+/gameoflife
+/asan
+/prof
