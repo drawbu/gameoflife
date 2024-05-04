@@ -1,6 +1,6 @@
 # ↓ Basic variables
 CC ?= gcc
-CFLAGS := -std=gnu11
+CFLAGS := -std=c99
 CFLAGS += -W -Wall -Wextra -Wpedantic
 CFLAGS += -Wundef -Wshadow -Wcast-align -Wunused
 CFLAGS += -Wstrict-prototypes -Wmissing-prototypes
@@ -10,9 +10,7 @@ CFLAGS += -U_FORTIFY_SOURCE
 CFLAGS += -iquote ./src
 
 LDLIBS := -lraylib
-ifeq ($(XDG_SESSION_TYPE), wayland)
 LDLIBS += -lwayland-client -lwayland-cursor -lwayland-egl
-endif
 LDFLAGS :=
 
 # ↓ Binaries
