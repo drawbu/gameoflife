@@ -1,4 +1,5 @@
 #include <raylib.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,6 +16,11 @@ typedef struct
     const int width;
     const int height;
     tile_t *data;
+    struct
+    {
+        int x;
+        int y;
+    } camera;
 } board_t;
 
 static tile_t get_tile(const board_t *b, int x, int y)
@@ -53,6 +59,10 @@ static void update_board(board_t *b)
         .height = b->height,
         .data = malloc(((size_t)b->width * b->height) * sizeof *b->data),
     };
+    if (copy.data == NULL) {
+        perror("malloc");
+        return;
+    }
     memcpy(copy.data, b->data, (size_t)b->width * b->height * sizeof *b->data);
 
     for (int x = 0; x < b->width; ++x) {
@@ -65,15 +75,30 @@ static void update_board(board_t *b)
                 if (neighbors == 3)
                     set_tile(b, x, y, Alive);
             }
-
         }
     }
     free(copy.data);
 }
 
+static void draw_board(const board_t *b, uint8_t zoom)
+{
+    BeginDrawing();
+    ClearBackground(BLACK);
+
+    for (int x = 0; x < b->width; ++x)
+        for (int y = 0; y < b->height; ++y)
+            if (get_tile(b, x, y) == Alive)
+                DrawRectangle(
+                    (x - b->camera.x) * zoom, (y - b->camera.y) * zoom, zoom,
+                    zoom, WHITE);
+
+    EndDrawing();
+}
+
 int main(void)
 {
     srand(time(NULL));
+    uint8_t zoom_level = 1;
 
     board_t b = {
         .width = 800,
@@ -94,22 +119,28 @@ int main(void)
 
     SetTargetFPS(60);
     while (!WindowShouldClose()) {
-        BeginDrawing();
-        ClearBackground(RAYWHITE);
+        if (IsKeyDown(KEY_SPACE))
+            update_board(&b);
 
-        switch (GetKeyPressed()) {
-            case KEY_SPACE:
-                update_board(&b);
-                break;
-            default:
-                break;
-        }
+        // zoooom
+        float wheel = GetMouseWheelMove();
+        if (wheel < 0) {
+            if (zoom_level > 1)
+                zoom_level -= 1;
+        } else if (wheel > 0)
+            if (zoom_level < 20)
+                zoom_level += 1;
 
-        for (int x = 0; x < b.width; ++x)
-            for (int y = 0; y < b.height; ++y)
-                DrawPixel(x, y, (get_tile(&b, x, y) == Alive) ? WHITE : BLACK);
+        if (IsKeyDown(KEY_LEFT))
+            b.camera.x -= 1;
+        if (IsKeyDown(KEY_RIGHT))
+            b.camera.x += 1;
+        if (IsKeyDown(KEY_UP))
+            b.camera.y -= 1;
+        if (IsKeyDown(KEY_DOWN))
+            b.camera.y += 1;
 
-        EndDrawing();
+        draw_board(&b, zoom_level);
     }
     CloseWindow();
 }
