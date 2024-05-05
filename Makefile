@@ -1,6 +1,6 @@
 # ↓ Basic variables
 CC ?= gcc
-CFLAGS := -std=c99
+CFLAGS := -std=gnu11
 CFLAGS += -W -Wall -Wextra -Wpedantic
 CFLAGS += -Wundef -Wshadow -Wcast-align -Wunused
 CFLAGS += -Wstrict-prototypes -Wmissing-prototypes
