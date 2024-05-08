@@ -19,7 +19,7 @@ ASAN_NAME := asan
 PROF_NAME := prof
 
 # Source files
-SRC := $(shell find ./src -name '*.c')
+SRC := $(shell find . -name '*.c')
 
 # ↓ Objects
 BUILD_DIR := .build
