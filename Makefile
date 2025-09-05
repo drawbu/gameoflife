@@ -8,10 +8,9 @@ CFLAGS += -Waggregate-return -Wcast-qual
 CFLAGS += -Wunreachable-code
 CFLAGS += -U_FORTIFY_SOURCE
 CFLAGS += -iquote ./src
+CFLAGS += $(shell pkg-config --cflags raylib)
 
-LDLIBS := -lraylib
-LDLIBS += -lwayland-client -lwayland-cursor -lwayland-egl
-LDFLAGS :=
+LDFLAGS := $(shell pkg-config --libs raylib)
 
 # ↓ Binaries
 NAME ?= gameoflife
@@ -40,31 +39,31 @@ all: $(NAME)
 # ↓ Compiling
 $(BUILD_DIR)/source/%.o: %.c
 	@ mkdir -p $(dir $@)
-	$(CC) -o $@ -c $< $(CFLAGS) $(LDLIBS) $(DEPS_FLAGS)
+	$(CC) -o $@ -c $< $(CFLAGS) $(DEPS_FLAGS)
 
 $(NAME): CFLAGS += -flto
 $(NAME): $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS) $(LDLIBS) $(LDFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 # ↓ Asan
 $(BUILD_DIR)/asan/%.o: %.c
 	@ mkdir -p $(dir $@)
-	$(CC) -o $@ -c $< $(CFLAGS) $(LDLIBS) $(DEPS_FLAGS)
+	$(CC) -o $@ -c $< $(CFLAGS) $(DEPS_FLAGS)
 
 $(ASAN_NAME): CFLAGS += -fsanitize=address,leak,undefined -g3
 $(ASAN_NAME): CFLAGS += -fanalyzer
 $(ASAN_NAME): CFLAGS += -D DEBUG_MODE
 $(ASAN_NAME): $(ASAN_OBJ)
-	$(CC) -o $@ $^ $(CFLAGS) $(LDLIBS) $(LDFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 # ↓ Profiler
 $(BUILD_DIR)/prof/%.o: %.c
 	@ mkdir -p $(dir $@)
-	$(CC) -o $@ -c $< $(CFLAGS) $(LDLIBS) $(DEPS_FLAGS)
+	$(CC) -o $@ -c $< $(CFLAGS) $(DEPS_FLAGS)
 
 $(PROF_NAME): CFLAGS += -pg
 $(PROF_NAME): $(PROF_OBJ)
-	$(CC) -o $@ $^ $(CFLAGS) $(LDLIBS) $(LDFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 # ↓ Coverage
 .PHONY: cov

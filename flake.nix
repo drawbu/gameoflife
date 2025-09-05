@@ -4,35 +4,43 @@
     utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = {self, ...} @ inputs:
-    inputs.utils.lib.eachDefaultSystem (system: let
-      pkgs = inputs.nixpkgs.legacyPackages.${system};
-      cc = pkgs.gcc12;
-    in rec {
-      formatter = pkgs.alejandra;
+  outputs =
+    { ... }@inputs:
+    inputs.utils.lib.eachDefaultSystem (
+      system:
+      let
+        pkgs = import inputs.nixpkgs { inherit system; };
+        inherit (pkgs) lib;
+      in
+      rec {
+        formatter = pkgs.nixfmt-tree;
 
-      devShells.default = pkgs.mkShell {
-        CC = "${cc}/bin/gcc";
-
-        inputsFrom = [packages.default];
-        packages = with pkgs; [valgrind gdb];
-      };
-
-      packages = {
-        default = packages.server;
-        server = pkgs.stdenv.mkDerivation {
-          name = "gameoflife";
-          src = ./.;
-
-          CC = "${cc}/bin/gcc";
-          buildInputs = with pkgs; [glibc gnumake];
-          nativeBuildInputs = with pkgs; [raylib wayland];
-
-          installPhase = ''
-            mkdir -p $out/bin
-            install -D $name $out/bin
-          '';
+        devShells.default = pkgs.mkShell {
+          inputsFrom = builtins.attrValues packages;
+          packages = with pkgs; [ ];
         };
-      };
-    });
+
+        packages = {
+          default = packages.server;
+          server = pkgs.gcc15Stdenv.mkDerivation {
+            name = "gameoflife";
+            src = lib.fileset.toSource {
+              root = ./.;
+              fileset = lib.fileset.unions [
+                ./gameoflife.c
+                ./Makefile
+              ];
+            };
+
+            buildInputs = with pkgs; [ pkg-config ];
+            nativeBuildInputs = with pkgs; [ raylib ];
+
+            installPhase = ''
+              mkdir -p $out/bin
+              install -Dm755 $name $out/bin
+            '';
+          };
+        };
+      }
+    );
 }
